@@ -21,7 +21,6 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/user")
 public class UserController {
 
-    @Autowired
     private UserService userService;
 
     private ModelMapper modelMapper = new ModelMapper();
