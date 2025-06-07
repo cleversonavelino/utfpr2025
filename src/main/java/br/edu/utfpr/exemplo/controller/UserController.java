@@ -1,7 +1,14 @@
 package br.edu.utfpr.exemplo.controller;
 
+import br.edu.utfpr.exemplo.exception.BusinessException;
+import br.edu.utfpr.exemplo.exception.NotFoundException;
+import br.edu.utfpr.exemplo.model.Address;
 import br.edu.utfpr.exemplo.model.User;
+import br.edu.utfpr.exemplo.model.vo.AddressVO;
 import br.edu.utfpr.exemplo.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -21,20 +28,24 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/user")
 public class UserController {
 
+    @Autowired
     private UserService userService;
 
     private ModelMapper modelMapper = new ModelMapper();
 
     @PostMapping
-    public ResponseEntity<UserVO> save(@RequestBody UserVO userVO) {
+    public ResponseEntity<UserVO> save(@RequestBody UserVO userVO) throws BusinessException {
         User user = modelMapper.map(userVO, User.class);
+        user.setAddresses(userVO.getAddresses().stream().
+                map(address -> modelMapper.map(address, Address.class)).
+                toList());
         userService.save(user);
         userVO.setId(user.getId());
         return new ResponseEntity<>(userVO, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserVO> update(@PathVariable("id") Long id, @RequestBody UserVO userVO) {
+    public ResponseEntity<UserVO> update(@PathVariable("id") Long id, @RequestBody UserVO userVO) throws BusinessException {
         User user = modelMapper.map(userVO, User.class);
         user.setId(id);
         userService.update(user);
@@ -42,8 +53,23 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public UserVO findById(@PathVariable("id") Long id) {
-        return modelMapper.map(userService.findById(id), UserVO.class);
+    @Operation(summary = "Get user by ID", description = "Returns a single user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved"),
+            @ApiResponse(responseCode = "404",  description = "Not found - The user was not found")
+    })
+    public ResponseEntity<UserVO> findById(@PathVariable("id") Long id) throws NotFoundException {
+        User user = userService.findById(id);
+        if (user == null) {
+            throw new NotFoundException();
+        }
+
+        UserVO userVO = modelMapper.map(user, UserVO.class);
+        userVO.setAddresses(user.getAddresses().stream().
+                map(address -> modelMapper.map(address, AddressVO.class)).
+                toList());
+
+        return new ResponseEntity<>(userVO, HttpStatus.OK);
     }
 
     @GetMapping
