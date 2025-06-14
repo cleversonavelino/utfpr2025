@@ -15,6 +15,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import br.edu.utfpr.exemplo.model.vo.UserVO;
 
@@ -72,6 +73,7 @@ public class UserController {
         return new ResponseEntity<>(userVO, HttpStatus.OK);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<UserVO>> findAll() {
         List<User> users = userService.findAll();

@@ -1,6 +1,7 @@
 package br.edu.utfpr.exemplo.model;
 
 import jakarta.persistence.*;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.List;
 
