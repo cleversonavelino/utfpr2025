@@ -40,6 +40,13 @@ public class UserService {
 
     @Transactional(propagation = Propagation.REQUIRED)
     public User save(User user) throws BusinessException {
+        if (user.getAddresses() == null) {
+            BusinessException ex = new BusinessException();
+            ex.setMessage("O Usuário precisa ter endereço.");
+            ex.setCodeDescription("ADDRESS_REQUIRED");
+            throw ex;
+        }
+
         user.getAddresses().forEach(address -> address.setUser(user));
         return userRepository.save(user);
     }

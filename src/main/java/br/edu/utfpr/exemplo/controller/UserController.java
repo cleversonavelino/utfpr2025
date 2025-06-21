@@ -37,9 +37,18 @@ public class UserController {
     @PostMapping
     public ResponseEntity<UserVO> save(@RequestBody UserVO userVO) throws BusinessException {
         User user = modelMapper.map(userVO, User.class);
+
+        if (userVO.getAddresses() == null) {
+            BusinessException ex = new BusinessException();
+            ex.setMessage("O Usuário precisa ter endereço.");
+            ex.setCodeDescription("ADDRESS_REQUIRED");
+            throw ex;
+        }
+
         user.setAddresses(userVO.getAddresses().stream().
                 map(address -> modelMapper.map(address, Address.class)).
                 toList());
+
         userService.save(user);
         userVO.setId(user.getId());
         return new ResponseEntity<>(userVO, HttpStatus.CREATED);
@@ -73,7 +82,7 @@ public class UserController {
         return new ResponseEntity<>(userVO, HttpStatus.OK);
     }
 
-    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('USER')")
+    //@PreAuthorize("hasAuthority('ADMIN') or hasAuthority('USER')")
     @GetMapping
     public ResponseEntity<List<UserVO>> findAll() {
         List<User> users = userService.findAll();
